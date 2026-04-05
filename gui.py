@@ -32,7 +32,7 @@ class DomainApp:
 
     def select_input_file(self):
         file_path = filedialog.askopenfilename(
-            filetypes=[("Excel files", "*.xlsx *.xls")]
+            filetypes=[("Excel/CSV files", "*.xlsx *.xls *.csv")]
         )
         if file_path:
             self.input_entry.delete(0, tk.END)
