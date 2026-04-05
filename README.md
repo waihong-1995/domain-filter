@@ -1,4 +1,4 @@
-# domain-filter - by Tan Wai Hong - 2 Apr 2026 - version 1.1
+# domain-filter - by Tan Wai Hong - 5 Apr 2026 - version 1.1
 A Python-based tool for processing and extracting root domain and subdomain from a list of domain provided
 
 # Features
@@ -32,6 +32,16 @@ Input:
 www.abc.com
 
 Output:
+root domain = abc.com
+subdomain = www
+
+Input:
+(In same cell)abc.com www.abc.com
+
+Output:
+root domain = abc.com
+subdomain = null
+
 root domain = abc.com
 subdomain = www
 
