@@ -1,8 +1,10 @@
-# domain-filter - by Tan Wai Hong - 2 Apr 2026 - version 1.0
+# domain-filter - by Tan Wai Hong - 2 Apr 2026 - version 1.1
 A Python-based tool for processing and extracting root domain and subdomain from a list of domain provided
 
 # Features
-- Process domain list from CSV/ Excel
+- Process domain list from Excel
+- Process domain list from csv (NEW)
+- Support multiple domain in the same cell (NEW)
 - GUI interface (Gradio)
 - Dockerfile available for containerization
 
