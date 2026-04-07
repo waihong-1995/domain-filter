@@ -9,25 +9,47 @@ def read_input_file(input_path):
 
     if ext in [".xlsx", ".xls"]:
         return pd.read_excel(input_path)
+
     elif ext == ".csv":
-        return pd.read_csv(input_path)
+        # Use python engine for better handling of messy CSV
+        return pd.read_csv(input_path, encoding="utf-8", engine="python")
+
     else:
         raise ValueError("Unsupported file format. Use Excel or CSV.")
 
 
+def clean_text(text):
+    """
+    Normalize messy CSV/Excel cell content
+    """
+    text = str(text)
+
+    # Replace newlines and tabs with space
+    text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ")
+
+    # Remove duplicate spaces
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+
 def split_domains(cell_value):
     """
-    Split multiple domains in one cell.
-    Handles spaces, commas, semicolons, etc.
+    Extract valid domains from a cell.
+    Works even if input is messy.
     """
     if pd.isna(cell_value):
         return []
 
-    # Split by whitespace, comma, semicolon
-    domains = re.split(r"[,\s;]+", str(cell_value))
+    text = clean_text(cell_value)
 
-    # Remove empty strings
-    return [d.strip() for d in domains if d.strip()]
+    # Extract domains (supports normal + wildcard like *.abc.com)
+    domains = re.findall(
+        r"(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}",
+        text
+    )
+
+    return domains
 
 
 def process_file(input_path, output_path, column_name="Domain"):
@@ -36,21 +58,30 @@ def process_file(input_path, output_path, column_name="Domain"):
     if column_name not in df.columns:
         raise ValueError(f"Column '{column_name}' not found.")
 
-    # Step 1: split domains into lists
+    # Step 1: extract domains into list
     df["Split Domains"] = df[column_name].apply(split_domains)
 
-    # Step 2: explode into multiple rows
+    # Step 2: explode into rows
     df = df.explode("Split Domains")
 
-    # Step 3: rename for clarity
-    df["Domain Cleaned"] = df["Split Domains"]
+    # Step 3: drop empty rows
+    df = df[df["Split Domains"].notna()]
 
-    # Step 4: extract root + subdomain
+    # Step 4: normalize domain
+    df["Domain Cleaned"] = df["Split Domains"].str.lower().str.strip()
+
+    # Step 5: extract root + subdomain
     df["Root Domain"] = df["Domain Cleaned"].apply(extract_root_domain)
     df["Subdomain"] = df["Domain Cleaned"].apply(extract_subdomain)
 
-    # Optional: drop helper column
+    # Optional: remove duplicates
+    df = df.drop_duplicates(subset=["Domain Cleaned"])
+
+    # Clean up
     df = df.drop(columns=["Split Domains"])
 
-    # Save output (always Excel for now)
-    df.to_excel(output_path, index=False)
+    # Output format
+    if output_path.endswith(".csv"):
+        df.to_csv(output_path, index=False)
+    else:
+        df.to_excel(output_path, index=False)
